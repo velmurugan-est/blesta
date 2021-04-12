@@ -1,0 +1,9 @@
+<?php 
+$message = "This page will close automatically in 2 sec. If not, You can close this window and refresh the integration page";
+echo $this->Html->ifSet($message);
+?>
+<?php
+$this->Javascript->setInline("
+ //window.opener.location.reload();
+// window.close();
+");

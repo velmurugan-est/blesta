@@ -1,0 +1,191 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+
+<?php 
+//echo $this->Html->ifSet($message);
+$blestaCustomerData = $this->Html->ifSet($blesta_customer_data,[]);
+$qboCustomerData = $this->Html->ifSet($qbo_customers_data,[]);
+$mapped_qbo_id = $this->Html->ifSet($mapped_qbo_id,'');
+
+            $tabs = array(
+                    array('name'=>"Customer", 'current'=>true,'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/customer")),
+                    array('name'=>"Invoice",  'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/invoice")),
+                    array('name'=>"Payments",  'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/payment"))
+                );
+                $link_buttons = [
+                        [
+                            'name' => 'Post to Qbo',
+                            'attributes' => [
+                                // 'title' => $this->_('Post', true),
+                                'id'=>'post_to_qbo',
+                                'href' => $this->Html->safe($this->base_uri . 'plugin/qbo_integration/admin_customer_list/post_customer/')
+                            ]
+                        ],
+                    ];
+            $this->Widget->clear();
+            $this->Widget->setLinkButtons($link_buttons);
+             $this->Widget->setAjaxFiltering();
+         //     $this->Widget->setWidgetButton('arrow');
+
+$this->Widget->create("Unmapped Clients", array('id' => "admin_customer_mapping", 'class' => "admin_customer_mapping"), $this->Html->ifSet($render_section, null));
+if(!$blestaCustomerData || !$qboCustomerData){
+  ?>
+    <div class="empty_section mt-4">
+            <div class="empty_box text-center">
+                No Records to show.
+            </div>
+        </div>
+    <?php
+    return false;
+}
+if($qboCustomerData){
+?>
+<div class="column section1 m-1 unmapped_client_list">
+    <input type="hidden" id="base_url" value="<?php $this->Html->_($this->base_uri);?>">
+    <input type="hidden" id="mapped_qbo_id" value="<?php $this->Html->_($mapped_qbo_id)?>" >
+    <?php $this->Form->create(null, ['id'=>'customer_mapping','class' => 'disable-on-submit','section'=>'admin_customer_list']);?>
+    <input type="hidden" name="module" value="customer">
+    <table class="table table-striped" id="customer_mapping_table">
+        <tr class="heading_row">
+            <td><input type="checkbox" class="checkAllClient"></td>
+            <td><span>Client ID</span></td>
+            <td><span>Blesta Customer</span></td>
+            <td><span>Company</span></td>
+            <td><span>Email</span></td>
+            <td><span>Quick Books Customer</td>
+            </tr>
+        <?php       
+                    $i=0;
+                    foreach($blestaCustomerData as $key=>$value){
+                    $client_url = 'clients/edit/'.$value->id;
+                     if($value->is_mapping != '' && $value->is_mapping == 0){
+                                }else{
+                        ?>
+    
+        <tr>
+            <td>
+            <input type="checkbox" name="selected_client_id[]" class='select_client' value="<?php $this->Html->_($value->id)?>">
+            </td>
+             <td>
+            <a href='<?php $this->Html->_($this->base_uri).$this->Html->_($client_url)?>'><?php $this->Html->_($value->id_value);?></a>
+            </td>
+                  <td><?php echo $this->Html->_($value->first_name, true) . ' ' . $this->Html->_($value->last_name, true);?></td>
+             <td>
+                    <?php $this->Html->_($value->company)?>
+            </td>
+             <td>
+                    <?php $this->Html->_($value->email)?>
+            </td>
+            <td>
+                <?php 
+                            if(isset($blestaCustomerData[$i])){
+                                     $qbo_id = $blestaCustomerData[$i]->qbo_id;
+                               ?>
+                             <select name="<?php $this->Html->_($value->id);?>" class="qbo_customer_select">
+                                <option value="">create a customer</option>
+                                <?php
+                                foreach($qboCustomerData->Id as $qb_key=>$qb_value){
+                                        if($qbo_id == $qb_key && $value->is_mapping == 1){
+                                            $selected = 'selected';
+                                        }else{
+                                            $selected = '';
+                                        }
+                                    ?>
+                                    <option value="<?php $this->Html->_($qb_key)?>" <?php $this->Html->_($selected); ?> style="display:<?php $this->Html->_($display);?>"><?php $this->Html->_($qb_value); ?></option>
+                                    <?php
+                                } ?>
+                            </select>
+                <?php
+                    
+                            }
+                        ?>
+            </td>
+        </tr>
+        <?php
+                                }
+                $i++;
+                    }
+         ?>
+            
+    </table>
+    <div class="button_row">
+        <?php
+        $this->Form->fieldSubmit('save',"Save", ['class' => 'btn btn-success float-right' ,'id'=>'saveMappingFields']);
+          $this->Pagination->build();
+        ?>
+    </div>
+    <?php $this->Form->end();?>
+</div>
+<?php 
+}else{
+    ?>
+    <div class="empty_section mt-4">
+            <div class="empty_box text-center">
+                No Records to show.Sync your quick books customer data <a href="<?php $this->Html->_($this->base_uri)?>plugin/qbo_integration/admin_configuration">here</a>
+            </div>
+        </div>
+    <?php
+}
+$this->Widget->end();
+?>
+<script>
+//remove ajax  class from pagination
+ $(document).ready(function(){
+      $('div.pagination').find('a').each(function(){
+        $(this).removeClass('ajax')
+        })
+ });
+$(document).on('click','#saveMappingFields',function(e){
+    e.preventDefault();
+     var mapping_url =$('#base_url').val()+'plugin/qbo_integration/admin_customer_list/saveMappingFields';
+     $('form#customer_mapping').attr('action',mapping_url);
+     $('form#customer_mapping').submit();
+});
+$(document).on('click','#post_to_qbo',function(e) {
+     e.preventDefault();
+     var post_customer_url = $(this).attr('href');
+     $('form#customer_mapping').attr('action',post_customer_url);
+     var form_data = $('form#customer_mapping').not('input[type=hidden]').serializeArray();    
+     if (!$('.select_client').is(':checked')) {
+          swal({
+        position: 'top',
+        icon: 'warning',
+        title: 'Atleast select one client.',
+        showConfirmButton: false,
+       // timer: 2000
+        });
+         return false; 
+     }
+      $('form#customer_mapping').submit();
+     /*
+     var page =  $('#page').val();
+         if(page){
+         window.location.href = post_customer_url+page;
+         }
+     */
+    });
+
+    $(document).on('click','input.checkAllClient',function () {
+     $(this).closest('table').find('input:checkbox').not(this).prop('checked', this.checked);
+ });
+
+  //check if customer is already select or not 
+  $(document).on('change','select.qbo_customer_select',function () {
+    //get mapped qbo customer id
+    var mapped_qbo_id = $('#mapped_qbo_id').val();
+    var mapped_qbo_id_arr = JSON.parse(mapped_qbo_id);
+    var selected_id = $(this).closest('table').find('option[value=' + $(this).val() + ']:selected').val()
+    if ($.inArray(selected_id,mapped_qbo_id_arr) !== -1 || $(this).closest('table').find('option[value=' + $(this).val() + ']:selected').length > 1)
+    {
+        var qbo_customer_name = $('option[value=' + $(this).val() + ']:selected').text();
+        swal({
+        position: 'top',
+        icon: 'warning',
+        title: 'This customer already mapped with blesta customer. Please choose any other customers.',
+        showConfirmButton: false,
+       // timer: 2000
+        });
+        $(this).val($(this).find('option:first').val());
+    }
+});
+</script>
+ 

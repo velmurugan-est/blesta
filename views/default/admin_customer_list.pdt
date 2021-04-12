@@ -1,0 +1,134 @@
+<?php
+        $is_ajax = $this->Html->ifSet($is_ajax,false);
+        echo $this->Html->ifSet($message);
+        $customersArr = $this->Html->ifSet($customersArr,[]);
+        $page = $this->Html->ifSet($page,'');
+        $pagination_type = $this->Html->ifSet($this->Pagination,'');
+      //  echo "<pre>";   print_R($pagination_type);die; 
+       $links = array(
+        array('name'=>"Mapped Clients", 'current'=>true, 'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_customer_list?type=customer_list","data-link"=>'client_list', "class"=>"customer_links")),
+        array('name'=>"Unmapped Clients", 'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/customer","data-link"=>'inner',"class"=>"customer_links"))
+    );
+        $link_buttons = [
+            [
+                'name' => 'Post to Qbo',
+                'attributes' => [
+                     // 'title' => $this->_('Post', true),
+                      'id'=>'post_to_qbo',
+                      'href' => $this->Html->safe($this->base_uri . 'plugin/qbo_integration/admin_customer_list/post_customer/')
+                ]
+            ],
+            [
+                'name' => 'Customer Mapping',
+                'attributes' => [
+                     // 'title' => $this->_('Post', true),
+                      'id'=>'customer_mapping',
+                      'href' => $this->Html->safe($this->base_uri . 'plugin/qbo_integration/admin_mapping/customer')
+                ]
+            ],
+
+        ];
+
+        $this->Widget->clear();
+  //    $this->Widget->setLinkButtons($link_buttons);
+        $this->Widget->setLinks($links);
+        // Allow the widget to be minimized
+        $this->Widget->setWidgetButton("arrow");
+        $this->Widget->create("Clients", array('id' => "admin_customer_list", 'class' => "admin_customer_list"), $this->Html->ifSet($render_section, null));
+        if(count($customersArr) != 0){
+        ?>
+<div class="column section1 m-1 client_list">
+<?php $this->Form->create(null, ['id'=>'client_list','class' => 'disable-on-submit','section'=>'admin_customer_list']);?>
+
+<input type='hidden' value="<?php $this->Html->_($page)?>" id="page">
+<table class="table table-striped" id="admin_customer_list">
+    <tr class="heading_row">
+        <td><input type="checkbox" class="checkAllClient"></td>
+        <td><span>Client ID</span></td>
+        <td><span>Name</span></td>
+        <td><span>Company</span></td>
+        <td><span>Email</td>
+        <td><span>Mapped with QBO Customer</span></td>
+        <td>Status</td>
+    </tr>
+    <?php           
+    foreach( $customersArr as $key=>$value){   
+        $client_url = 'clients/edit/'.$value->client_id;
+    ?>
+    <tr>
+        <td>
+            <input type="checkbox" name="client_id[]" value="<?php $this->Html->_($value->client_id)?>">
+        </td>
+        <td>
+            <a href='<?php $this->Html->_($this->base_uri).$this->Html->_($client_url)?>'><?php $this->Html->_($value->id_value);?></a>
+        </td>
+        <td><?php echo $this->Html->_($value->first_name, true) . ' ' . $this->Html->_($value->last_name, true);?></td>
+         <td>
+            <?php $this->Html->_($value->company);?>
+        </td>
+        
+         <td>
+            <?php $this->Html->_($value->email);?>
+        </td>
+        <td>
+            <?php $this->Html->_($value->qbo_customer_name);?>
+        </td>
+         <td>
+            <?php $this->Html->_($value->status);?>
+        </td>
+    </tr>
+    <?php
+                }
+                 ?>
+</table>
+<?php
+    $this->Pagination->build();
+}else{
+    
+    ?>
+ <div class="empty_section m-1 client_list">
+            <div class="empty_box">
+                No Records to show
+            </div>
+        </div>
+<?php
+}
+$this->Form->end();
+?>
+<input type="hidden" id="base_url" value="<?php $this->Html->_($this->base_uri);?>">    
+</div>
+<?php
+$this->Widget->end();
+?>
+
+<?php 
+if($is_ajax != true){
+//echo $this->Html->ifSet($mapping); 
+}
+ ?>     
+ <script type="text/javascript">
+   $(document).on('click','.customer_links',function(e){
+        e.preventDefault();
+        var url = $(this).attr('href');
+        var link = $(this).data('link');
+        var ele = $('.admin_customer_list').find('.'+link);
+         console.log(link)
+        if( link == 'inner'){
+            $('div.client_list').hide();
+        }else{
+            $('#admin_customer_list').find('.common_box_content > .inner').hide();
+        }
+            $(ele).show();
+    })
+  $(document).ready(function() {
+            var base_url = $('#base_url').val();
+            $.ajax({
+                'type':'post',
+                'url': base_url+'plugin/qbo_integration/admin_mapping/customer',
+                 success:function(response){
+                     var ele = $('.admin_customer_list').find('.common_box_content')
+                     $(response.content).appendTo(ele);
+                }
+            });
+        });
+ </script>

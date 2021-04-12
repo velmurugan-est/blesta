@@ -1,0 +1,176 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+
+<?php 
+//echo $this->Html->ifSet($message);
+$blestaproductData = $this->Html->ifSet($blesta_product_data,[]);
+$qboproductData = $this->Html->ifSet($qbo_product_data,[]);
+//echo "<pre>";print_R($blestaproductData);die;
+$mapped_qbo_id = $this->Html->ifSet($mapped_qbo_id,'');
+//echo "<pre>";print_R($mapped_qbo_id);die;
+            $tabs = array(
+                    array('name'=>"product", 'current'=>true,'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/product")),
+                    array('name'=>"Invoice",  'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/invoice")),
+                    array('name'=>"Payments",  'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/payment"))
+                );
+                $link_buttons = [
+                        [
+                            'name' => 'Post to Qbo',
+                            'attributes' => [
+                                // 'title' => $this->_('Post', true),
+                                'id'=>'post_pack_to_qbo',
+                                'href' => $this->Html->safe($this->base_uri . 'plugin/qbo_integration/admin_product_list/post_product/')
+                            ]
+                        ],
+                    ];
+            $this->Widget->clear();
+            $this->Widget->setLinkButtons($link_buttons);
+             $this->Widget->setAjaxFiltering();
+         //     $this->Widget->setWidgetButton('arrow');
+
+$this->Widget->create("Unmapped products", array('id' => "admin_product_mapping", 'class' => "admin_product_mapping"), $this->Html->ifSet($render_section, null));
+if($qboproductData){
+?>
+<div class="column section1 m-1 unmapped_product_list">
+    <input type="hidden" id="base_url" value="<?php $this->Html->_($this->base_uri);?>">
+    <input type="hidden" id="mapped_qbo_id" value="<?php $this->Html->_($mapped_qbo_id)?>" >
+    <?php $this->Form->create(null, ['id'=>'product_mapping','class' => 'disable-on-submit']);?>
+    <input type="hidden" name="module" value="product">
+    <table class="table table-striped" id="product_mapping_table">
+        <tr class="heading_row">
+            <td><input type="checkbox" class="checkAllproduct"></td>
+            <td><span>ID</span></td>
+            <td><span>Name</span></td>
+            <td><span>Quantity</span></td>
+            <td><span>Quick Books product</td>
+            </tr>
+        <?php       
+                    $i=0;
+                    foreach($blestaproductData as $key=>$value){
+                    $product_url = 'packages/edit/'.$value->id;
+                     if($value->is_mapping != '' && $value->is_mapping == 0){
+                                }else{
+                        ?>
+    
+        <tr>
+            <td>
+            <input type="checkbox" name="selected_product_id[]" class='select_product' value="<?php $this->Html->_($value->id)?>">
+            </td>
+             <td>
+            <a href='<?php $this->Html->_($this->base_uri).$this->Html->_($product_url)?>'><?php $this->Html->_($value->id_value);?></a>
+            </td>
+                  <td><?php echo $this->Html->_($value->name, true);?></td>
+             <td>
+                    <?php $this->Html->_($value->qty)?>
+            </td>
+            <td>
+                <?php 
+                            if(isset($blestaproductData[$i])){
+                         //  echo "<pre>";print_R($blestaproductData[$i]);die;
+                            
+                                     $qbo_id = $blestaproductData[$i]->qbo_id;
+                                     
+                               ?>
+                             <select name="<?php $this->Html->_($value->id);?>" class="qbo_product_select" style="width:50%">
+                                <option value="">create a product</option>
+                                <?php
+                                foreach($qboproductData->Id as $qb_key=>$qb_value){
+                                        if($qbo_id == $qb_key && $value->is_mapping == 1){
+                                            $selected = 'selected';
+                                        }else{
+                                            $selected = '';
+                                        }
+                                    ?>
+                                    <option value="<?php $this->Html->_($qb_key)?>" <?php $this->Html->_($selected); ?> style="display:<?php $this->Html->_($display);?>"><?php $this->Html->_($qb_value); ?></option>
+                                    <?php
+                                } ?>
+                            </select>
+                <?php
+                    
+                            }
+                        ?>
+            </td>
+        </tr>
+        <?php
+                                }
+                $i++;
+                    }
+         ?>
+            
+    </table>
+    <div class="button_row">
+        <?php
+        $this->Form->fieldSubmit('save',"Save", ['class' => 'btn btn-success float-right' ,'id'=>'saveproductMappingFields','data-url'=>'plugin/qbo_integration/admin_product_list/saveproductMappingFields']);
+          //    $this->Pagination->build();
+        ?>
+    </div>
+    <?php $this->Form->end();?>
+</div>
+<?php 
+}else{
+    ?>
+    <div class="empty_section mt-4">
+            <div class="empty_box text-center">
+                No Records to show.Sync your quick books product data <a href="<?php $this->Html->_($this->base_uri)?>plugin/qbo_integration/admin_configuration">here</a>
+            </div>
+        </div>
+    <?php
+}
+$this->Widget->end();
+?>
+<script>
+$(document).on('click','#saveproductMappingFields',function(e){
+    e.preventDefault();
+     var plugin_url = $(this).data('url')
+     var mapping_url =$('#base_url').val()+plugin_url;
+     $('form#product_mapping').attr('action',mapping_url);
+   //  return false;  
+     $('form#product_mapping').submit();
+});
+$(document).on('click','#post_pack_to_qbo',function(e) {
+     e.preventDefault();
+     var post_product_url = $(this).attr('href');
+     $('form#product_mapping').attr('action',post_product_url);
+     var form_data = $('form#product_mapping').not('input[type=hidden]').serializeArray();    
+     if (!$('.select_product').is(':checked')) {
+          swal({
+        position: 'top',
+        icon: 'warning',
+        title: 'Atleast select one product.',
+        showConfirmButton: false,
+       // timer: 2000
+        });
+         return false;
+     }
+      $('form#product_mapping').submit();
+     /*
+     var page =  $('#page').val();
+         if(page){
+         window.location.href = post_product_url+page;
+         }
+     */
+    });
+
+    $(document).on('click','input.checkAllproduct',function () {
+     $(this).closest('table').find('input:checkbox').not(this).prop('checked', this.checked);
+ });
+  //check if product is already select or not 
+  $(document).on('change','select.qbo_product_select',function () {
+    //get mapped qbo product id
+    var mapped_qbo_id = $('#mapped_qbo_id').val();
+    var mapped_qbo_id_arr = JSON.parse(mapped_qbo_id);
+    var selected_id = $(this).closest('table').find('option[value=' + $(this).val() + ']:selected').val()
+    if ($.inArray(selected_id,mapped_qbo_id_arr) !== -1 || $(this).closest('table').find('option[value=' + $(this).val() + ']:selected').length > 1)
+    {
+        var qbo_product_name = $('option[value=' + $(this).val() + ']:selected').text();
+        swal({
+        position: 'top',
+        icon: 'warning',
+        title: 'This product already mapped with blesta product. Please choose any other products.',
+        showConfirmButton: false,
+       // timer: 2000
+        });
+        $(this).val($(this).find('option:first').val());
+    }
+});
+</script>
+ 

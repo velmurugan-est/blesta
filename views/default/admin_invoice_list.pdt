@@ -1,0 +1,148 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+<?php 
+        echo $this->Html->ifSet($message);
+        $invoices = $this->Html->ifSet($invoicesArr,[]);
+        $customersArr = $this->Html->ifSet($customersArr,[]);
+        $page = $this->Html->ifSet($page,'');
+        //  echo "<pre>";print_R($invoices);die;
+        $link_buttons = [
+            [
+                
+                'name' => 'Post to Qbo ',
+                'attributes' => [
+                     // 'title' => $this->_('Post', true),
+                      'id'=>'post_invoice_to_qbo',
+                     'href' => $this->Html->safe($this->base_uri . 'plugin/qbo_integration/admin_invoice_list/post_invoices/')
+                ]
+            ]
+        ];
+        
+        $this->Widget->clear();
+        $this->Widget->setLinkButtons($link_buttons);
+        $this->Widget->setWidgetButton("arrow");
+        $this->Widget->create("Invoice List", array('id' => "admin_invoices_list"), $this->Html->ifSet($render_section, null));
+        if(count($invoices) !=0){
+        ?>
+<input type='hidden' value="<?php $this->Html->_($page)?>" id="page">
+<?php $this->Form->create(null, ['id'=>'invoice_list','class' => 'disable-on-submit','section'=>'admin_invoices_list']);?>
+<table class="table table-striped table-hover" id="admin_invoices_list">
+    <tr class="heading_row">
+        <td><input type="checkbox" class="checkAllInvoice"></td>
+        <td><span>Invoice</span></td>
+        <td><span>Client</span></td>
+        <td><span>Amount</span></td>
+        <td><span>Paid</span></td>
+        <td><span>Due</span></td>
+        <td><span>Date Billed</span></td>
+        <td><span>Date Due</span></td>
+        <td><span>status</span></td>
+    </tr>
+    <?php           
+                 foreach( $invoices as $key=>$value){   
+                     $billing_date = date("M d Y",strtotime($value['date_billed']));
+                     $due_date = date("M d Y",strtotime($value['date_due']));
+                     $total = number_format($value['total'], 2);
+                     $paid = number_format($value['paid'], 2);
+                     $due = number_format($value['due'], 2);
+    ?>
+    <tr>
+        <td><input type="checkbox" name="selected_invoice_id[]" class='select_invoice' value="<?php $this->Html->_($value['id'])?>"></td>
+        <td>
+            <?php $this->Html->_($value['id_value']);?>
+        </td>
+        <td>
+            <a href="<?php $this->Html->_($this->base_uri)?>clients/view/<?php $this->Html->_($value['client_id'])?>"><?php $this->Html->_($value['client_id_code']);?></a>
+        </td>
+          <td>
+            $<?php $this->Html->_($total);?>
+        </td> 
+         <td>
+            $<?php $this->Html->_($paid);?>
+        </td> 
+         <td>
+            $<?php $this->Html->_($due);?>
+        </td> 
+         <td>
+            <?php $this->Html->_($billing_date);?>
+        </td> 
+        <td class="red_txt">
+            <?php $this->Html->_($due_date);?>
+        </td> 
+        <td>
+            <?php $this->Html->_($value['status']);?>
+        </td>
+    </tr>
+    <?php
+                }
+                 ?>
+</table>
+
+<?php
+ $this->Pagination->build();
+        }else{
+            ?>
+             <div class="empty_section">
+            <div class="empty_box">
+               No Records to show
+            </div>
+        </div>
+            <?php
+        }
+$this->Form->end();
+$this->Widget->end();
+?>
+<script>
+$(document).on('click','#post_invoice_to_qbo',function(e) {
+     e.preventDefault();
+     var post_customer_url = $(this).attr('href');
+     $('form#invoice_list').attr('action',post_customer_url);
+     var form_data = $('form#invoice_list').not('input[type=hidden]').serializeArray();    
+     if (!$('.select_invoice').is(':checked')) {
+          swal({
+        position: 'top',
+        icon: 'warning',
+        title: 'Atleast select one invoice.',
+        showConfirmButton: false,
+       // timer: 2000
+        });
+         return false;
+     }
+    // return false;
+      $('form#invoice_list').submit();
+     /*
+     var page =  $('#page').val();
+         if(page){
+         window.location.href = post_customer_url+page;
+         }
+     */
+    });
+
+    $(document).on('click','input.checkAllInvoice',function () {
+     $(this).closest('table').find('input:checkbox').not(this).prop('checked', this.checked);
+ });
+ //remove ajax  class from pagination
+ $(document).ready(function(){
+      $('div.pagination').find('a').each(function(){
+                    $(this).removeClass('ajax')
+                })
+ });
+    $(document).on('click','a.page-link',function(e){
+                e.preventDefault();
+                var section_type=$(this).parents().closest('form').attr('section');
+               // console.log(section_type)
+                var pagination_url = $(this).attr('href')+'&type='+section_type;
+                $.ajax({
+                    'type':"post",
+                     url:pagination_url,
+                     success:function(data){
+                         if(data.content){
+                            console.log(data)
+                         $('#'+section_type).find('.content_section').html(data.content);
+                         }else{
+                        
+                         $('#'+section_type).find('.content_section').html(data);
+                         }
+                     }
+                });
+    });
+</script>

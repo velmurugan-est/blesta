@@ -1,0 +1,16 @@
+<?php
+  $tabs = array(
+        array('name'=>"Customer", 'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/customer")),
+        array('name'=>"Invoice", 'current'=>true, 'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/invoice")),
+        array('name'=>"Payments", 'current'=>true, 'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/payment"))
+    );
+$this->Widget->clear();
+ $this->Widget->setTabs($tabs);   
+$this->Widget->create("Mapping", array('id' => "my_widget_id", 'class' => "my_widget_class"), "full");
+ 
+#
+# TODO: Place widget contents here
+#
+ 
+$this->Widget->end();
+?>

@@ -1,0 +1,41 @@
+<?php echo $this->Html->ifSet($message);?>
+<input type="hidden" id="base_url" value="<?php $this->Html->_($this->base_uri);?>">    
+<section class="customer"></section>
+<section class="invoice"></section>
+
+<section class="product"></section>
+<script type="text/javascript">
+  $(document).ready(function() {
+
+            var base_url = $('#base_url').val();
+            $.ajax({
+                'type':'post',
+                'url': base_url+'plugin/qbo_integration/admin_customer_list',
+                 success:function(response){
+                     $(response).appendTo('section.customer');
+                     $('div.client_list').hide();
+                }
+            });
+             $.ajax({
+                'type':'post',
+                'url': base_url+'plugin/qbo_integration/admin_invoice_list',
+                 success:function(response){
+                     $(response).appendTo('section.invoice');
+                }
+            });
+             $.ajax({
+                'type':'post',
+                'url': base_url+'plugin/qbo_integration/admin_product_list',
+                 success:function(response){
+                     $(response).appendTo('section.product');
+                     $('div.product_list').hide();
+
+                }
+            });
+            
+             });
+$(document).on('click','a.arrow',function(){
+     $(this).parents().eq('2').find('.common_box_inner').toggle();
+    // $(this).find('i').css('transform','rotate(180deg)')
+})
+</script>

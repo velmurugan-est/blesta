@@ -1,0 +1,106 @@
+<?php
+
+    $productsArr = $this->Html->ifSet($product_list,[]);
+    //echo "<pre>";print_R($productsArr);die;
+    $links = array(
+        array('name'=>"Mapped Package", 'current'=>true, 'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_product_list?type=product_list", "data-link"=>'product_list', "class"=>"product_links" )),
+        array('name'=>"Unmapped Package", 'attributes'=>array('href'=>$this->base_uri . "plugin/qbo_integration/admin_mapping/product","data-link"=>'inner',"class"=>"product_links"))
+    );
+    
+    $this->Widget->clear();
+    $this->Widget->setLinks($links);
+    $this->Widget->setWidgetButton("arrow");
+    $this->Widget->create("Package", array('id' => "admin_product_list", 'class' => "admin_product_list"), $this->Html->ifSet($render_section, null));
+    if(count($productsArr) != 0){
+        ?>
+<div class="column section1 m-1 product_list">
+<?php $this->Form->create(null, ['id'=>'product_list','class' => 'disable-on-submit']);?>
+
+<input type='hidden' value="<?php $this->Html->_($page)?>" id="page">
+<table class="table table-striped" id="admin_product_list">
+    <tr class="heading_row">
+        <td><input type="checkbox" class="checkAllClient"></td>
+        <td><span>ID</span></td>
+        <td><span>Name</span></td>
+        <td><span>Quantity</span></td>
+        <td><span>Mapped with QBO Product</span></td>
+        <td>Status</td>
+    </tr>
+    <?php           
+    foreach( $productsArr as $key=>$value){   
+        $package_url = 'packages/edit/'.$value->id;
+        if($value->is_mapping == '0'){
+    ?>
+
+    <tr>
+        <td>
+            <input type="checkbox" name="product_id[]" value="<?php $this->Html->_($value->id)?>">
+        </td>
+        <td>
+            <a href='<?php $this->Html->_($this->base_uri).$this->Html->_($package_url)?>'><?php $this->Html->_($value->id);?></a>
+        </td>
+        <td><?php echo $this->Html->_($value->name, true);?></td>
+         <td>
+            <?php $this->Html->_($value->qty);?>
+        </td>
+        
+         <td>
+            <?php $this->Html->_($value->name);?>
+        </td>
+         <td>
+            <?php $this->Html->_($value->status);?>
+        </td>
+    </tr>
+    <?php
+                }
+    }
+                 ?>
+</table>
+<?php
+ //$this->Pagination->build();
+}else{
+    
+    ?>
+ <div class="empty_section m-1 product_list">
+            <div class="empty_box">
+                No Records to show
+            </div>
+        </div>
+<?php
+}
+$this->Form->end();
+?>
+<input type="hidden" id="base_url" value="<?php $this->Html->_($this->base_uri);?>">    
+</div>
+<?php
+    $this->Widget->end();
+?>
+<script>
+  $(document).on('click','input.checkAllClient',function () {
+     $(this).closest('table').find('input:checkbox').not(this).prop('checked', this.checked);
+ });
+  $(document).on('click','.product_links',function(e){
+        e.preventDefault();
+        var url = $(this).attr('href');
+        var link = $(this).data('link');
+        var ele = $('.admin_product_list').find('.'+link);
+        console.log(link)
+        if( link == 'inner'){
+            $('div.product_list').hide();
+        }else{
+            $('#admin_product_list').find('.common_box_content > .inner').hide();
+        }
+            $(ele).show();
+    })
+  $(document).ready(function() {
+            var base_url = $('#base_url').val();
+            $.ajax({
+                'type':'post',
+                'url': base_url+'plugin/qbo_integration/admin_mapping/product',
+                 success:function(response){
+                     var ele = $('.admin_product_list').find('.common_box_content')
+                   $(response.content).appendTo(ele);
+                }
+            });
+        });
+</script>

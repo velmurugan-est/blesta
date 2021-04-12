@@ -1,0 +1,9 @@
+{
+    "version": "1.0.0",
+    "name": "QboIntegrationPlugin.name",
+    "description": "QboIntegrationPlugin.description",
+    "authors": [{
+        "name": "Expert solution technologies",
+        "url": "https://www.expsoltech.com/"
+    }]
+}

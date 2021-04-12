@@ -1,0 +1,228 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+<?php
+echo $this->Html->ifSet($message);
+$authUrl = $this->Html->ifSet($auth_url,'');
+$is_connect = $this->Html->ifSet($is_connected,0);
+$entityData = $this->Html->ifSet($entity_data,[]);
+$customer_last_sync = isset($entityData['customer']) ? $entityData['customer'] : '-';
+$account_last_sync = isset($entityData['account']) ? $entityData['account'] : '-';
+$invoice_last_sync = isset($entityData['invoice']) ? $entityData['invoice'] : '-';
+$payment_last_sync = isset($entityData['payment']) ? $entityData['payment'] : '-';
+$product_last_sync = isset($entityData['product']) ? $entityData['product'] : '-';
+
+
+$count = $this->Html->ifSet($count,0);
+if($count > 0){
+ $config_form = 'none';
+     $link_buttons = array(
+        array('name'=>"Edit Api Credentials",'attributes'=>array("href"=>$this->Html->safe($this->base_uri . "plugin/qbo_integration/admin_configuration?action=edit")))
+    );
+}
+if($is_connect == 1){
+    $status = 'Connected';
+}else{
+    $status = 'Disconnected';
+}
+$vars = $this->Html->ifSet($vars,[]);
+            if(isset($authUrl) && $authUrl){
+               $display_connection = 'block';
+            }else{
+                $display_connection = 'none';
+            }
+$this->Widget->clear();
+$this->Widget->setLinkButtons($this->Html->ifSet($link_buttons,[]));
+$this->Widget->create("QBO Integration", array('id' => "configuration", 'class' => "configuration"),);
+?>
+ <div class="inner col-md-12">
+     <div class="row">
+    <div class="col-12" style="display:<?php $this->Html->_($config_form)?>">
+                    <?php $this->Form->create(null, ['id'=>'configuration','class' => 'disable-on-submit']);?>
+                     <div class="pad">
+                        <h3>Credentials for the API</h3>
+                        <p class="mt-4">Enter your QuickBooks online API credentials to integrate with blesta.Learn How to access your API credentials <a href="https://developer.intuit.com/app/developer/appdetail/test/keys">QuickBooks API credentials</a></p>
+                        <table class="table" style="border:none">
+                        <tr><td></td></tr>
+                        <tr>
+                         <td style="font-weight:bold;width:20%">
+                            <?php 
+                                $this->Form->label('Production Client Id', 'client_id');
+                            ?>
+                         </td>
+                         <td>
+                            <?php 
+                                $this->Form->fieldText('name', $this->Html->ifSet($vars['client_id'],''), ['name' => 'client_id','id'=>'client_id','style'=>'width:50%']);
+                            ?>
+                         </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold;width:20%">
+                                <?php 
+                                $this->Form->label('Production Client Secret', 'client_secret');
+                                ?>
+                            </td>
+                            <td>
+                                <?php 
+                                $this->Form->fieldText('name', $this->Html->ifSet($vars['client_secret'],''), ['name' => 'client_secret','id'=>'client_secret','style'=>'width:50%']);
+                                ?>
+                            </td>
+                        </tr>
+                         <tr>
+                            <td style="font-weight:bold;width:20%">
+                                <?php 
+                                $this->Form->label('Redirect Url', 'redirect_url');
+                                ?>
+                            </td>
+                            <td>
+                                <?php 
+                                $this->Form->fieldText('name', $this->Html->ifSet($vars['redirect_url'],''), ['name' => 'redirect_url','id'=>'redirect_url','placeholder'=>'http://127.0.0.6/blesta/blesta/admin/','style'=>'width:50%']);
+                                ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                            <a class="btn btn-primary" href="<?php $this->Html->_($this->base_uri)?>plugin/qbo_integration/admin_configuration">Cancel</a>
+                             <?php
+                            $this->Form->fieldSubmit('save',"Save", ['class' => 'btn btn-success' ,'id'=>'save_config']);
+                            ?>
+                            </td>
+                        </tr>
+                        </table>
+                    </div>
+                    
+                    <?php $this->Form->end();?>
+        </div>
+        <div class='col-md-6 ml-4 mb-4' style="display:<?php $this->Html->_($display_connection)?>;">
+             <div class="row">
+               <span><img src="<?php $this->Html->_($this->view_dir)?>images/logo.png" ></span>
+               <span style="margin-top:2rem;margin-left:1rem;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill-rule="evenodd" d="M13.22 19.03a.75.75 0 001.06 0l6.25-6.25a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 10-1.06 1.06l4.97 4.97H3.75a.75.75 0 000 1.5h14.44l-4.97 4.97a.75.75 0 000 1.06z"></path></svg></span>
+               <span><img src="<?php $this->Html->_($this->view_dir)?>images/qb_logo.jpg" ></span>
+             </div>
+              <div>
+                <p>Status:&nbsp;<?php $this->Html->_($status)?></p>
+             </div>
+             <?php 
+                if($is_connect == 1){
+                    ?>
+                        <div>
+                         <button type="button" class="btn btn-success " data-url=<?php $this->Html->_($authUrl);?> id="qbo_disconnect" ><i class="fas fa-link"></i>&nbsp;Disconnect from QBO</button>
+                        </div>
+                        <div class="pad mt-4">
+                        <h1>Sync details</h1>
+                        </div>
+                         <table class="table mt-4 table-striped">
+                            <tr><td></td><td></td></tr>
+                            <tr>
+                            <td>Customer</td>
+                            <td><i class="fas fa-sync-alt text-success sync" data-type='customer'></i>&nbsp;Last synced:&nbsp;<span id="customer_last_sync"><?php $this->Html->_($customer_last_sync)?></span></td>
+                            </tr>
+                             <tr>
+                            <td>Accounts</td>
+                            <td><i class="fas fa-sync-alt text-success sync" data-type='account'></i>&nbsp;Last synced:&nbsp;<span id="account_last_sync"><?php $this->Html->_($account_last_sync)?></span></td>
+                            </tr>
+                            <tr>
+                            <td>Invoice</td>
+                            <td><i class="fas fa-sync-alt text-success sync"></i>&nbsp;Last synced:&nbsp;<?php $this->Html->_($invoice_last_sync)?></td>
+                            </tr>
+                             <td>Product</td>
+                            <td><i class="fas fa-sync-alt text-success sync " data-type='product'></i>&nbsp;Last synced:&nbsp;<span id="product_last_sync"><?php $this->Html->_($product_last_sync)?></span></td>
+                            </tr>
+                            <tr>
+                            <td>Payment</td>
+                            <td><i class="fas fa-sync-alt text-success"></i>&nbsp;Last synced:&nbsp;<?php $this->Html->_($payment_last_sync)?></td>
+                            </tr>
+                        </table>
+                        <?php
+                }else{
+                        ?>
+                         <div>
+                         <button type="button" class="btn btn-success" data-url=<?php $this->Html->_($authUrl);?> id="qbo_connect" >Connect to QBO</button>
+                        </div>
+                        <?php
+                }
+             ?>
+        </div>
+    </div>
+ </div>
+<?php 
+$this->Widget->end();
+?>
+<script>
+var click = 0;
+$('.sync').click(function(){
+    var type = $(this).data('type');
+    var Obj = $(this);
+    //add spinner class 
+    $(this).addClass('fa-spin');
+    var sync_url = window.location.pathname + '/getList?type='+type
+   $.ajax({
+        "type":"post",
+        "url":sync_url,
+        "data":{type:type},
+         success:function(response){
+             var resultObj = JSON.parse(response);
+             var status = resultObj.status;
+             var typeArr = [];
+             typeArr[click] = resultObj.type
+              if(status == true){
+                click++;
+                //remove spin icon 
+                Obj.removeClass('fa-spin');
+                $('#'+type+'_last_sync').html(resultObj.last_sync_date);
+                 for(var i=0;i<click;i++){
+                 swal({
+                toast: true,    
+                position: 'top',
+                icon: 'success',
+                title: typeArr[i] +' Synced Successfully',
+            // timer: 2000
+                });
+            }
+              }
+        }
+   });
+});
+</script>
+<?php
+
+$this->Javascript->setInline("
+
+
+ $('#save_config').click(function(e){
+     e.preventDefault();
+     var client_id = $('#client_id').val();
+     var client_secret = $('#client_secret').val();
+     var redirect_url = $('#redirect_url').val();
+     if(!client_id){
+         $('#client_id').focus();
+         $('<p style=color:red>Client Id should not be empty</p>').insertAfter($('#client_id'));
+         return false;
+     }
+      if(!client_secret){
+         $('#client_secret').focus();
+         $('<p style=color:red>Client Secret should not be empty</p>').insertAfter($('#client_secret'));
+         return false;
+     }
+      if(!redirect_url){
+         $('#redirect_url').focus();
+         $('<p style=color:red>Redirect Url should not be empty</p>').insertAfter($('#redirect_url'));
+         return false;
+     }
+     var params = new window.URLSearchParams(window.location.search);
+    var params_val = params.get('action');
+    if(params.get('action') == 'edit'){
+     $('form#configuration').attr('action',window.location.pathname+'/edit');
+    }else{
+     $('form#configuration').attr('action',window.location.href+'/add');
+    }
+     $('form#configuration').submit();
+ });
+ $('#qbo_connect').click(function() {
+     var redirect_url = $(this).data('url');
+     var popUpurl =  window.open(redirect_url, 'Popup', 'toolbar=no,scrollbars=no,location=no,statusbar=no,menubar=no,resizable=0,width=500,height=400');
+
+    });
+//disconnect from qbo
+$('#qbo_disconnect').click(function(){
+    window.location.href = window.location.href+'/disconnect';
+});
+");

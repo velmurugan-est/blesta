@@ -1,0 +1,272 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+<?php
+echo $this->Html->ifSet($message);
+$account_data = $this->Html->ifSet($account_data,[]);
+$qb_encoded_account_data = json_encode($account_data);
+$product_type_data = $this->Html->ifSet($product_type_data,[]);
+$product_type = isset($product_type_data->product_type) ? $product_type_data->product_type : '' ;
+$decoded_settings_accounts = isset($product_type_data->accounts) ? json_decode($product_type_data->accounts) : '' ;
+//echo "<pre>";print_R($account_data);die;
+if($product_type == 'Inventory'){
+    $show_inventory = 'selected';
+}elseif($product_type == 'Service'){
+    $show_service = 'selected';
+    $asset_account_display = 'none';
+}elseif($product_type == 'NonInventory'){
+    $show_non_inventory = 'selected';
+    $asset_account_display = 'none';
+}
+//echo "<pre>";print_R($account_data);die;
+$this->Widget->clear();
+// Allow the widget to be minimized
+$this->Widget->setWidgetButton("arrow");
+// Allow this widget's setting to be updated using ClientMain::settings()
+$this->Widget->create("QBO Product Settings", array('id' => "my_widget_id", 'class' => "my_widget_class"), "full");
+    if($account_data){
+        $this->Form->create(null, ['id'=>'package_settings','class' => 'disable-on-submit']);
+        ?>      
+             <div class="pad">
+              <table class="table package_settings_table" style="border:none">
+                        <tr><td></td></tr>
+                        <tr>
+                         <td style="font-weight:bold;width:20%;">Product Type&nbsp;<span style="color:red">*</span></td>
+                         <td>
+                            <select name="product_type" class="product_type" style="width:50%">
+                                <option value="" >choose a product type</option>
+                                <option value="Service" <?php $this->Html->_($show_service);?> data-account = "<?php $this->Html->_($qb_encoded_account_data);?>">Services</option>
+                                <option value="Inventory" <?php $this->Html->_($show_inventory);?> data-account = "<?php $this->Html->_($qb_encoded_account_data);?>">Inventory</option>
+                                <option value="NonInventory" <?php $this->Html->_($show_non_inventory);?> data-account = "<?php $this->Html->_($qb_encoded_account_data);?>">Non Inventory</option>
+                            </select>
+                         </td>
+                        </tr>
+                        <tr class="asset_account" style="display:<?php $this->Html->_($asset_account_display);?>">
+                             <td style="font-weight:bold;width:20%">Inventory Asset Account&nbsp;<span style="color:red">*</span></td>
+                             <td>
+                                <select name="asset_account" class="asset_account" style="width:50%">
+                                <option value="0">select account</option>
+                                <?php 
+                                  foreach($account_data as $key=>$value){
+                                       if($decoded_settings_accounts){
+                                       if($value->Id == $decoded_settings_accounts->asset_account){
+                                            $selected = 'selected';
+                                      }else{
+                                          $selected = '';
+                                      }
+                                       }
+                                    if($value->AccountType == "Other Current Asset" && $value->AccountSubType == "Inventory" && $product_type == 'Inventory'){
+                                    ?>
+                                    <option value="<?php $this->Html->_($value->Id);?>" <?php $this->Html->_($selected);?> ><?php $this->Html->_($value->Name);?></option>
+                                    <?php
+                                    }
+                                  }
+                                ?>
+                                </select>
+                             </td>
+                        </tr>
+                        <tr class="income_account">
+                             <td style="font-weight:bold;width:20%">Income Account&nbsp;<span style="color:red">*</span></td>
+                             <td>
+                                <select name="income_account" class="income_account" style="width:50%">
+                                <option value="0">select account</option>
+                                <?php 
+                                  foreach($account_data as $key=>$value){
+                                       if($decoded_settings_accounts){
+                                      if($value->Id == $decoded_settings_accounts->income_account){
+                                            $selected = 'selected';
+                                      }else{
+                                          $selected = '';
+                                      }
+                                       }
+                                     
+                                   if($value->AccountType == "Income" && $value->AccountSubType == "SalesOfProductIncome" && $product_type == 'Inventory'){
+                                    ?>
+                                    <option value="<?php $this->Html->_($value->Id);?>" <?php $this->Html->_($selected);?> ><?php $this->Html->_($value->Name);?></option>
+                                    <?php
+                                    }else{
+                                    ?>
+                                    <option value="<?php $this->Html->_($value->Id);?>" <?php $this->Html->_($selected);?> ><?php $this->Html->_($value->Name);?></option>
+                                    <?php
+                                    }
+                                  }
+                                ?>
+                                </select>
+                             </td>
+                        </tr>
+                         <tr class="expense_account">
+                             <td style="font-weight:bold;width:20%">Expense Account&nbsp;<span style="color:red">*</span></td>
+                                <td>
+                                <select name="expense_account" class="expense_account" style="width:50%">
+                                 <option value="0">select account</option>
+                                <?php 
+                                foreach($account_data as $key=>$value){
+                                       if($decoded_settings_accounts){
+                                     if($value->Id == $decoded_settings_accounts->expense_account){
+                                            $selected = 'selected';
+                                      }else{
+                                          $selected = '';
+                                      }
+                                       }
+                                   if($value->AccountType == "Cost of Goods Sold" && $value->AccountSubType == "SuppliesMaterialsCogs" && $product_type == 'Inventory'){
+                                    ?>
+                                    <option value="<?php $this->Html->_($value->Id);?>" <?php $this->Html->_($selected);?> ><?php $this->Html->_($value->Name);?></option>
+                                    <?php
+                                    }else{
+                                    ?>
+                                    <option value="<?php $this->Html->_($value->Id);?>" <?php $this->Html->_($selected);?> ><?php $this->Html->_($value->Name);?></option>
+                                    <?php
+                                    } 
+                                    }   
+                                ?>
+                                </select>
+                                </td>
+                        </tr>
+        </table>
+        </div>
+         <div class="button_row">
+        <?php
+        $this->Form->fieldSubmit('save',"Save", ['class' => 'btn btn-success m-1' ,'id'=>'save_settings']);
+        ?>
+        </div>
+        <?php
+        $this->Form->end();
+    }else{
+        ?>
+        <div class="empty_section mt-4">
+                <div class="empty_box text-center">
+                    No Records to show.Sync your quick books customer data <a href="<?php $this->Html->_($this->base_uri)?>plugin/qbo_integration/admin_configuration">here</a>
+                </div>
+            </div>
+        <?php
+    }
+    ?>
+<?php
+$this->Widget->end();
+?>
+<script>
+    $(document).on('change','select.product_type',function(){
+        var product_type = $(this,"option:selected").val();
+        var account_data_obj = $(this).find("option:selected").data('account');
+        var income_account_data = [];
+        var expense_account_data = [];
+        var asset_account_data = [];
+            
+            var income_account_options = '<option value=0>Choose an account</option>';
+            var expense_account_options = '<option value=0>Choose an account</option>';
+            var asset_account_options = '<option value=0>Choose an account</option>';
+           
+        if(product_type == 'Inventory'){
+            $.each(account_data_obj,function(key,value){
+                 if(value.AccountType == "Income" && value.AccountSubType == "SalesOfProductIncome"){
+                      income_account_options += "<option value="+value.Id+">"+value.Name+"</option>";
+                      $('select.income_account').html(income_account_options);
+                    //  income_account_data.push(value.Name)
+                 }
+                  if(value.AccountType == "Cost of Goods Sold" && value.AccountSubType == "SuppliesMaterialsCogs"){
+                    expense_account_options += "<option value="+value.Id+">"+value.Name+"</option>";
+                    $('select.expense_account').html(expense_account_options);
+                   // expense_account_data.push(value.Name)
+                 }
+                  if(value.AccountType == "Other Current Asset" && value.AccountSubType == "Inventory"){
+                    asset_account_options += "<option value="+value.Id+">"+value.Name+"</option>";
+                    $('select.asset_account').html(asset_account_options);
+                   // asset_account_data.push(value.Name)
+                 }
+            });
+            
+            $('table.package_settings_table tr.income_account').show();
+            $('table.package_settings_table tr.asset_account').show();
+            $('table.package_settings_table tr.expense_account').show();
+
+        }else{
+            $.each(account_data_obj,function(key,value){
+                    income_account_options += "<option value="+value.Id+">"+value.Name+"</option>";
+                    expense_account_options += "<option value="+value.Id+">"+value.Name+"</option>";
+                      $('select.income_account').html(income_account_options);
+                      $('select.expense_account').html(expense_account_options);
+
+            });
+            $('table.package_settings_table tr.asset_account').hide();
+            $('table.package_settings_table tr.income_account').show();
+            $('table.package_settings_table tr.expense_account').show();
+        }
+        //get product type selected value 
+        $.ajax({
+            type:"post",
+            url:window.location.href + '/getSettings',
+            data:{product_type:product_type},
+            dataType:'JSON',
+            success:function(data){
+                    if(data){
+                    $('select.asset_account option:selected').attr("selected",null);
+                    $('select.income_account option:selected').attr("selected",null);
+                    $('select.expense_account option:selected').attr("selected",null);
+                    var product_type_data = data;
+                    var income_account = product_type_data.income_account;
+                    var expense_account = product_type_data.expense_account;
+                    if(product_type == 'Inventory'){
+                    var asset_account = product_type_data.asset_account;
+                    $('select.asset_account').find('option[value='+asset_account+']').attr("selected","selected");
+                    }
+                    $('select.income_account').find('option[value='+income_account+']').attr("selected","selected");
+                    $('select.expense_account').find('option[value='+expense_account+']').attr("selected","selected");
+                }
+            }
+        });
+    });
+    //save settings value
+    $(document).on('click','#save_settings',function(e){
+        e.preventDefault();
+        var product_type = $('select.product_type option:selected').val();
+        var income_account = $('select.income_account option:selected').val();
+        var asset_account = $('select.asset_account option:selected').val();
+        var expense_account = $('select.expense_account option:selected').val();
+         if(product_type == 0){
+        swal({
+        position: 'top',
+        icon: 'warning',
+        title: 'Please select a product type',
+        showConfirmButton: false,
+       // timer: 2000
+        });
+         return false;
+       }
+        if(product_type == 'Inventory'){
+             if(asset_account == 0){
+                swal({
+                position: 'top',
+                icon: 'warning',
+                title: 'Please select a asset account',
+                showConfirmButton: false,
+            // timer: 2000
+                });
+                return false;
+    
+        }    
+        }
+       if(income_account == 0 ){
+                swal({
+                position: 'top',
+                icon: 'warning',
+                title: 'Please select a income account',
+                showConfirmButton: false,
+            // timer: 2000
+                });
+                return false;
+            }
+              if(expense_account == 0){
+                swal({
+                position: 'top',
+                icon: 'warning',
+                title: 'Please select a expense account',
+                showConfirmButton: false,
+            // timer: 2000
+                });
+                return false;
+            }
+        //change form action 
+        var action_url = window.location.href + "saveSettings";
+        $('form#package_settings').attr('action',action_url);
+     //   return false;
+        $('form#package_settings').submit();
+    });
+</script>

@@ -1,0 +1,61 @@
+<?php 
+        
+        $transaction = $this->Html->ifSet($transactionArr,[]);
+        $customersArr = $this->Html->ifSet($customersArr,[]);
+        $link_buttons = [
+            [
+                
+                'name' => 'Post to Qbo  ',
+                'attributes' => [
+                     // 'title' => $this->_('Post', true),
+                      'id'=>'post_to_qbo',
+                  //  'href' => $this->Html->safe($this->base_uri . 'plugin/support_manager/admin_departments/add/')
+                ]
+            ]
+        ];
+
+        $this->Widget->clear();
+        $this->Widget->setLinkButtons($link_buttons);
+        
+        $this->Widget->create("Payments", array('id' => "admin_transaction_list", 'class' => "admin_transaction_list"), "full");
+
+        ?>
+<table class="table" id="admin_transaction_list">
+    <tr class="heading_row">
+        <td><span>Customer Name</span></td>
+        <td><span>Amount</span></td>
+        <td><span>Currency</span></td>
+        <td><span>status</span></td>
+    </tr>
+    <?php           
+                 foreach( $transaction as $key=>$value){   
+    ?>
+    <tr>
+        
+        <td>
+            <?php $this->Html->_($customersArr[$key]['username']);?>
+        </td>
+         <td>
+            <?php $this->Html->_($value['amount']);?>
+        </td> 
+        <td>
+            <?php $this->Html->_($value['currency']);?>
+        </td> 
+        <td>
+            <?php $this->Html->_($value['status']);?>
+        </td>
+    </tr>
+    <?php
+                }
+                 ?>
+</table>
+<?php
+      
+$this->Widget->end();
+?>
+<?php
+$this->Javascript->setInline("
+ $('#post_to_qbo').click(function() {
+    window.location.href = window.location.href+'/post_payments';
+    });
+");
